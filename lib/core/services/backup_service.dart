@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:public_file_saver/public_file_saver.dart';
 
 import 'local_store.dart';
 
@@ -10,33 +9,27 @@ class BackupService {
   BackupService({LocalStore? store}) : _store = store ?? LocalStore();
 
   final LocalStore _store;
-  final PublicFileSaver _saver = PublicFileSaver();
 
   Future<bool> exportBackup() async {
     final raw = await _store.exportJson();
     final now = DateTime.now();
     final fileName =
         'mahnegar-backup-${now.year}${_two(now.month)}${_two(now.day)}-${_two(now.hour)}${_two(now.minute)}.json';
-    final result = await _saver.saveBytesWithDialog(
-      bytes: Uint8List.fromList(utf8.encode(raw)),
+    final uri = await FilePicker.saveFile(
+      dialogTitle: 'ذخیره نسخه پشتیبان ماه‌نگار',
       fileName: fileName,
-      mimeType: 'application/json',
+      bytes: Uint8List.fromList(utf8.encode(raw)),
     );
-    return result?.isSuccess == true;
+    return uri != null;
   }
 
   Future<List<CalendarEntry>?> importBackup() async {
-    final result = await FilePicker.platform.pickFiles(
+    final file = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: const ['json'],
-      withData: true,
     );
-    if (result == null || result.files.isEmpty) return null;
-    final file = result.files.single;
-    final bytes = file.bytes;
-    if (bytes == null) {
-      throw const FormatException('Backup file could not be read');
-    }
+    if (file == null) return null;
+    final bytes = await file.readAsBytes();
     return _store.importJson(utf8.decode(bytes));
   }
 
