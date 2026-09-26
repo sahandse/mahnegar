@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahnegar/core/services/notification_service.dart';
 import 'package:mahnegar/features/calendar/presentation/calendar_page.dart';
 
 final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await MahNegarNotificationService.instance.initialize();
   runApp(const ProviderScope(child: MahNegarApp()));
 }
 
