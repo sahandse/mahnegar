@@ -28,14 +28,11 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import base64
-
           source = Path('assets/branding/mahnegar_logo.webp.b64')
           logo = base64.b64decode(source.read_text().strip())
-
           drawable = Path('android/app/src/main/res/drawable-nodpi')
           drawable.mkdir(parents=True, exist_ok=True)
           (drawable / 'mahnegar_master.webp').write_bytes(logo)
-
           for density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']:
               target = Path(f'android/app/src/main/res/mipmap-{density}')
               target.mkdir(parents=True, exist_ok=True)
@@ -53,32 +50,37 @@ jobs:
               'android.permission.READ_CALENDAR',
               'android.permission.WRITE_CALENDAR',
               'android.permission.POST_NOTIFICATIONS',
+              'android.permission.READ_CONTACTS',
           ]
           for permission in permissions:
               if permission not in text:
                   text = text.replace(marker, marker + f'\n    <uses-permission android:name="{permission}" />')
           text = text.replace('android:label="mahnegar"', 'android:label="ماه‌نگار"')
-          text = text.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher"')
+          receiver = '''
+                  <receiver android:name=".MahNegarWidgetProvider" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                      </intent-filter>
+                      <meta-data android:name="android.appwidget.provider" android:resource="@xml/mahnegar_widget_info" />
+                  </receiver>
+          '''
+          if 'MahNegarWidgetProvider' not in text:
+              text = text.replace('</application>', receiver + '\n    </application>')
           manifest.write_text(text)
 
           gradle = Path('android/app/build.gradle.kts')
           if gradle.exists():
               g = gradle.read_text().replace('minSdk = flutter.minSdkVersion', 'minSdk = 24')
               if 'isCoreLibraryDesugaringEnabled' not in g:
-                  g = g.replace(
-                      'compileOptions {\n        sourceCompatibility',
-                      'compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n        sourceCompatibility',
-                  )
+                  g = g.replace('compileOptions {\n        sourceCompatibility', 'compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n        sourceCompatibility')
               if 'desugar_jdk_libs' not in g:
                   g += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
               gradle.write_text(g)
           PY
 
-          mkdir -p android/app/src/main/res/drawable
+          mkdir -p android/app/src/main/res/drawable android/app/src/main/res/layout android/app/src/main/res/xml android/app/src/main/kotlin/ir/sahand/mahnegar
           cat > android/app/src/main/res/drawable/ic_stat_mahnegar.xml <<'XML'
-          <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="24dp" android:height="24dp"
-              android:viewportWidth="24" android:viewportHeight="24">
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
             <path android:fillColor="#FFFFFFFF" android:pathData="M15.8,2.2c-4.6,1.2 -7.5,5.8 -6.1,10.3 1.4,4.5 6.2,6.9 10.5,5.1 -2.3,0.3 -4.7,-0.5 -6.2,-2.3 -2.9,-3.3 -2.2,-8.5 1.8,-13.1z"/>
             <path android:fillColor="#FFFFFFFF" android:pathData="M8,10h8.8c0.7,0 1.2,0.5 1.2,1.2v7.1c0,0.7 -0.5,1.2 -1.2,1.2H8c-0.7,0 -1.2,-0.5 -1.2,-1.2v-7.1C6.8,10.5 7.3,10 8,10zM8.2,12.1h8.4v1.3H8.2zM9.1,14.6h1.5v1.5H9.1zM11.8,14.6h1.5v1.5h-1.5zM14.5,14.6h1.5v1.5h-1.5z"/>
           </vector>
@@ -86,29 +88,61 @@ jobs:
 
           cat > android/app/src/main/res/drawable/launch_background.xml <<'XML'
           <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-            <item>
-              <shape android:shape="rectangle">
-                <solid android:color="#08152F" />
-              </shape>
-            </item>
-            <item android:gravity="center" android:width="180dp" android:height="180dp">
-              <bitmap android:gravity="fill" android:src="@drawable/mahnegar_master" />
-            </item>
+            <item><shape android:shape="rectangle"><solid android:color="#08152F" /></shape></item>
+            <item android:gravity="center" android:width="180dp" android:height="180dp"><bitmap android:gravity="fill" android:src="@drawable/mahnegar_master" /></item>
           </layer-list>
+          XML
+          cp android/app/src/main/res/drawable/launch_background.xml android/app/src/main/res/drawable-v21/launch_background.xml
+
+          cat > android/app/src/main/res/layout/mahnegar_widget.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+              android:orientation="vertical" android:padding="16dp" android:background="#0B1C42">
+              <TextView android:id="@+id/widget_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="ماه‌نگار" android:textColor="#FFD77A" android:textStyle="bold" android:textSize="16sp" />
+              <TextView android:id="@+id/widget_date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="22sp" />
+              <TextView android:id="@+id/widget_occasion" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:maxLines="2" android:textColor="#DCE5FF" android:textSize="12sp" />
+              <TextView android:id="@+id/widget_moon" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="#FFD77A" android:textSize="12sp" />
+              <TextView android:id="@+id/widget_next" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:maxLines="1" android:textColor="#FFFFFF" android:textSize="12sp" />
+          </LinearLayout>
           XML
 
-          cat > android/app/src/main/res/drawable-v21/launch_background.xml <<'XML'
-          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-            <item>
-              <shape android:shape="rectangle">
-                <solid android:color="#08152F" />
-              </shape>
-            </item>
-            <item android:gravity="center" android:width="180dp" android:height="180dp">
-              <bitmap android:gravity="fill" android:src="@drawable/mahnegar_master" />
-            </item>
-          </layer-list>
+          cat > android/app/src/main/res/xml/mahnegar_widget_info.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="180dp" android:minHeight="110dp"
+              android:minResizeWidth="110dp" android:minResizeHeight="70dp"
+              android:updatePeriodMillis="86400000"
+              android:initialLayout="@layout/mahnegar_widget"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen" />
           XML
+
+          cat > android/app/src/main/kotlin/ir/sahand/mahnegar/MahNegarWidgetProvider.kt <<'KOTLIN'
+          package ir.sahand.mahnegar
+
+          import android.appwidget.AppWidgetManager
+          import android.content.Context
+          import android.content.SharedPreferences
+          import android.widget.RemoteViews
+          import es.antonborri.home_widget.HomeWidgetLaunchIntent
+          import es.antonborri.home_widget.HomeWidgetProvider
+
+          class MahNegarWidgetProvider : HomeWidgetProvider() {
+              override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray, widgetData: SharedPreferences) {
+                  appWidgetIds.forEach { widgetId ->
+                      val views = RemoteViews(context.packageName, R.layout.mahnegar_widget).apply {
+                          setTextViewText(R.id.widget_date, widgetData.getString("date", "ماه‌نگار"))
+                          setTextViewText(R.id.widget_occasion, widgetData.getString("occasion", ""))
+                          setTextViewText(R.id.widget_moon, "${widgetData.getString("moon", "")} • ${widgetData.getString("scorpio", "")}")
+                          setTextViewText(R.id.widget_next, "بعدی: ${widgetData.getString("next", "")}")
+                          setOnClickPendingIntent(R.id.widget_root, HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java))
+                      }
+                      appWidgetManager.updateAppWidget(widgetId, views)
+                  }
+              }
+          }
+          KOTLIN
 
       - name: Install dependencies
         run: flutter pub get
