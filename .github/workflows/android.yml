@@ -28,8 +28,15 @@ jobs:
           from pathlib import Path
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           text = manifest.read_text()
-          if 'READ_CALENDAR' not in text:
-              text = text.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android">', '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.READ_CALENDAR" />\n    <uses-permission android:name="android.permission.WRITE_CALENDAR" />')
+          marker = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
+          permissions = [
+              'android.permission.READ_CALENDAR',
+              'android.permission.WRITE_CALENDAR',
+              'android.permission.POST_NOTIFICATIONS',
+          ]
+          for permission in permissions:
+              if permission not in text:
+                  text = text.replace(marker, marker + f'\n    <uses-permission android:name="{permission}" />')
           text = text.replace('android:label="mahnegar"', 'android:label="ماه‌نگار"')
           text = text.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/mahnegar_logo"')
           manifest.write_text(text)
