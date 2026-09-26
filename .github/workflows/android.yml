@@ -39,6 +39,9 @@ jobs:
               (target / 'ic_launcher.webp').write_bytes(logo)
           PY
 
+      - name: Apply dashboard fixes
+        run: python3 tool/fix_dashboard_v2.py
+
       - name: Configure Android
         run: |
           python3 - <<'PY'
