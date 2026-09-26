@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,10 +9,19 @@ import 'package:mahnegar/features/home/mahnegar_home.dart';
 
 final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await MahNegarNotificationService.instance.initialize();
   runApp(const ProviderScope(child: MahNegarApp()));
+  unawaited(_initializeOptionalServices());
+}
+
+Future<void> _initializeOptionalServices() async {
+  try {
+    await MahNegarNotificationService.instance.initialize();
+  } catch (error, stackTrace) {
+    debugPrint('MahNegar optional notification init failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
 }
 
 class MahNegarApp extends StatelessWidget {
