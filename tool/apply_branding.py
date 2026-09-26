@@ -22,3 +22,11 @@ if start_marker in text and end_marker in text:
     text = text[:start] + replacement + text[end:]
 
 calendar.write_text(text, encoding='utf-8')
+
+# flutter create generates default PNG launcher resources. The release workflow
+# writes the exact MahNegar master logo as WebP with the same resource name, so
+# remove the generated defaults first to avoid duplicate Android resources.
+for density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']:
+    launcher = Path(f'android/app/src/main/res/mipmap-{density}/ic_launcher.png')
+    if launcher.exists():
+        launcher.unlink()
