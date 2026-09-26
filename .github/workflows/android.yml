@@ -1,0 +1,87 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Bootstrap Android platform
+        run: |
+          if [ ! -d android ]; then
+            flutter create --platforms=android --org ir.sahand --project-name mahnegar .
+          fi
+
+      - name: Configure Android
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          text = manifest.read_text()
+          marker = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
+          permissions = [
+              'android.permission.READ_CALENDAR',
+              'android.permission.WRITE_CALENDAR',
+              'android.permission.POST_NOTIFICATIONS',
+          ]
+          for permission in permissions:
+              if permission not in text:
+                  text = text.replace(marker, marker + f'\n    <uses-permission android:name="{permission}" />')
+          text = text.replace('android:label="mahnegar"', 'android:label="ماه‌نگار"')
+          text = text.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/mahnegar_logo"')
+          manifest.write_text(text)
+
+          gradle = Path('android/app/build.gradle.kts')
+          if gradle.exists():
+              g = gradle.read_text().replace('minSdk = flutter.minSdkVersion', 'minSdk = 24')
+              if 'isCoreLibraryDesugaringEnabled' not in g:
+                  g = g.replace(
+                      'compileOptions {\n        sourceCompatibility',
+                      'compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n        sourceCompatibility',
+                  )
+              if 'desugar_jdk_libs' not in g:
+                  g += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
+              gradle.write_text(g)
+          PY
+          mkdir -p android/app/src/main/res/drawable
+          cat > android/app/src/main/res/drawable/mahnegar_logo.xml <<'XML'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp" android:height="108dp"
+              android:viewportWidth="108" android:viewportHeight="108">
+            <path android:fillColor="#131936" android:pathData="M18,0h72a18,18 0,0 1,18 18v72a18,18 0,0 1,-18 18h-72a18,18 0,0 1,-18 -18v-72a18,18 0,0 1,18 -18z"/>
+            <path android:fillColor="#FFD98A" android:pathData="M62,17c-20,5 -31,25 -24,44 7,19 28,28 46,18 -9,2 -20,-1 -27,-9 -13,-14 -11,-37 5,-53z"/>
+            <path android:fillColor="#FFFFFF" android:pathData="M48,55h33a5,5 0,0 1,5 5v24a5,5 0,0 1,-5 5h-33a5,5 0,0 1,-5 -5v-24a5,5 0,0 1,5 -5z"/>
+            <path android:fillColor="#3347C8" android:pathData="M43,65h43v6h-43zM52,76h6v6h-6zM62,76h6v6h-6zM72,76h6v6h-6z"/>
+          </vector>
+          XML
+
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+      - name: Test
+        run: flutter test
+      - name: Build APK
+        run: flutter build apk --release
+      - name: Build AAB
+        run: flutter build appbundle --release
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mahnegar-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: mahnegar-aab
+          path: build/app/outputs/bundle/release/app-release.aab

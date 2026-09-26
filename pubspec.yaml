@@ -1,0 +1,30 @@
+name: mahnegar
+description: تقویم فارسی ماه‌نگار با رویدادها، کارها، نجوم و همگام‌سازی تقویم دستگاه.
+publish_to: "none"
+version: 1.0.0+5
+
+environment:
+  sdk: ">=3.7.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shamsi_date: ^1.0.4
+  intl: ^0.20.2
+  flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.5.3
+  device_calendar_plus: ^0.8.1
+  astronomia: ^1.1.1
+  flutter_local_notifications: ^19.5.0
+  google_fonts: ^6.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
