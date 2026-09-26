@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahnegar/core/services/notification_service.dart';
-import 'package:mahnegar/features/calendar/presentation/calendar_page.dart';
+import 'package:mahnegar/features/home/mahnegar_home.dart';
 
 final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
 
@@ -68,7 +68,7 @@ class MahNegarApp extends StatelessWidget {
         themeMode: mode,
         home: const Directionality(
           textDirection: TextDirection.rtl,
-          child: CalendarPage(),
+          child: MahNegarHome(),
         ),
       ),
     );
