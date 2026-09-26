@@ -1,5 +1,8 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationPreferences {
   const NotificationPreferences({
@@ -9,6 +12,8 @@ class NotificationPreferences {
     required this.showMoonPhase,
     required this.showScorpio,
     required this.showNextEvent,
+    required this.morningSummary,
+    required this.morningHour,
   });
 
   final bool enabled;
@@ -17,6 +22,8 @@ class NotificationPreferences {
   final bool showMoonPhase;
   final bool showScorpio;
   final bool showNextEvent;
+  final bool morningSummary;
+  final int morningHour;
 
   static const defaults = NotificationPreferences(
     enabled: false,
@@ -25,6 +32,8 @@ class NotificationPreferences {
     showMoonPhase: false,
     showScorpio: true,
     showNextEvent: true,
+    morningSummary: false,
+    morningHour: 8,
   );
 
   NotificationPreferences copyWith({
@@ -34,6 +43,8 @@ class NotificationPreferences {
     bool? showMoonPhase,
     bool? showScorpio,
     bool? showNextEvent,
+    bool? morningSummary,
+    int? morningHour,
   }) => NotificationPreferences(
         enabled: enabled ?? this.enabled,
         showDate: showDate ?? this.showDate,
@@ -41,6 +52,8 @@ class NotificationPreferences {
         showMoonPhase: showMoonPhase ?? this.showMoonPhase,
         showScorpio: showScorpio ?? this.showScorpio,
         showNextEvent: showNextEvent ?? this.showNextEvent,
+        morningSummary: morningSummary ?? this.morningSummary,
+        morningHour: morningHour ?? this.morningHour,
       );
 }
 
@@ -51,16 +64,28 @@ class MahNegarNotificationService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
   static const _notificationId = 1404;
+  static const _morningId = 1405;
   static const _channelId = 'mahnegar_today';
   static const _channelName = 'ماه‌نگار امروز';
+  bool _initialized = false;
 
   Future<void> initialize() async {
+    if (_initialized) return;
     const android = AndroidInitializationSettings('@drawable/ic_stat_mahnegar');
     const settings = InitializationSettings(android: android);
     await _plugin.initialize(settings);
+    tz.initializeTimeZones();
+    try {
+      final local = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(local.identifier));
+    } catch (_) {
+      // timezone package keeps its safe default if OS timezone lookup fails.
+    }
+    _initialized = true;
   }
 
   Future<bool> requestPermission() async {
+    await initialize();
     final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     return await android?.requestNotificationsPermission() ?? true;
   }
@@ -74,6 +99,8 @@ class MahNegarNotificationService {
       showMoonPhase: prefs.getBool('status_notification_moon') ?? NotificationPreferences.defaults.showMoonPhase,
       showScorpio: prefs.getBool('status_notification_scorpio') ?? NotificationPreferences.defaults.showScorpio,
       showNextEvent: prefs.getBool('status_notification_event') ?? NotificationPreferences.defaults.showNextEvent,
+      morningSummary: prefs.getBool('morning_summary_enabled') ?? NotificationPreferences.defaults.morningSummary,
+      morningHour: prefs.getInt('morning_summary_hour') ?? NotificationPreferences.defaults.morningHour,
     );
   }
 
@@ -86,10 +113,13 @@ class MahNegarNotificationService {
       prefs.setBool('status_notification_moon', value.showMoonPhase),
       prefs.setBool('status_notification_scorpio', value.showScorpio),
       prefs.setBool('status_notification_event', value.showNextEvent),
+      prefs.setBool('morning_summary_enabled', value.morningSummary),
+      prefs.setInt('morning_summary_hour', value.morningHour.clamp(0, 23)),
     ]);
   }
 
   Future<void> showStatus({required String title, required String body}) async {
+    await initialize();
     const androidDetails = AndroidNotificationDetails(
       _channelId,
       _channelName,
@@ -102,6 +132,7 @@ class MahNegarNotificationService {
       showWhen: false,
       category: AndroidNotificationCategory.reminder,
       icon: '@drawable/ic_stat_mahnegar',
+      visibility: NotificationVisibility.public,
     );
     await _plugin.show(
       _notificationId,
@@ -111,5 +142,43 @@ class MahNegarNotificationService {
     );
   }
 
-  Future<void> hideStatus() => _plugin.cancel(_notificationId);
+  Future<void> scheduleMorningSummary({
+    required int hour,
+    required String body,
+  }) async {
+    await initialize();
+    await _plugin.cancel(_morningId);
+    final now = tz.TZDateTime.now(tz.local);
+    var next = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour.clamp(0, 23));
+    if (!next.isAfter(now)) next = next.add(const Duration(days: 1));
+    const details = AndroidNotificationDetails(
+      'mahnegar_morning',
+      'خلاصه صبحگاهی ماه‌نگار',
+      channelDescription: 'خلاصه اختیاری برنامه، مناسبت و وضعیت آسمان در شروع روز',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: '@drawable/ic_stat_mahnegar',
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+    );
+    await _plugin.zonedSchedule(
+      _morningId,
+      'صبح بخیر 🌙',
+      body,
+      next,
+      const NotificationDetails(android: details),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  Future<void> cancelMorningSummary() async {
+    await initialize();
+    await _plugin.cancel(_morningId);
+  }
+
+  Future<void> hideStatus() async {
+    await initialize();
+    await _plugin.cancel(_notificationId);
+  }
 }
