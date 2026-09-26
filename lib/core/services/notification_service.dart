@@ -55,7 +55,7 @@ class MahNegarNotificationService {
   static const _channelName = 'ماه‌نگار امروز';
 
   Future<void> initialize() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('@drawable/ic_stat_mahnegar');
     const settings = InitializationSettings(android: android);
     await _plugin.initialize(settings);
   }
@@ -101,6 +101,7 @@ class MahNegarNotificationService {
       onlyAlertOnce: true,
       showWhen: false,
       category: AndroidNotificationCategory.reminder,
+      icon: '@drawable/ic_stat_mahnegar',
     );
     await _plugin.show(
       _notificationId,
