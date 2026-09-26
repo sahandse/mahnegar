@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mahnegar/core/services/notification_service.dart';
 import 'package:mahnegar/features/home/mahnegar_home.dart';
 
@@ -21,12 +22,11 @@ class MahNegarApp extends StatelessWidget {
       seedColor: dark ? const Color(0xFF8B93FF) : const Color(0xFF3347C8),
       brightness: brightness,
     );
-    return ThemeData(
+    final base = ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: dark ? const Color(0xFF0C0E15) : const Color(0xFFF7F8FC),
-      fontFamily: 'IRANSans',
       appBarTheme: const AppBarTheme(centerTitle: false, elevation: 0),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -46,6 +46,10 @@ class MahNegarApp extends StatelessWidget {
         elevation: 0,
         indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
+    );
+    return base.copyWith(
+      textTheme: GoogleFonts.vazirmatnTextTheme(base.textTheme),
+      primaryTextTheme: GoogleFonts.vazirmatnTextTheme(base.primaryTextTheme),
     );
   }
 
