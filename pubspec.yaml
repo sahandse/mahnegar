@@ -1,10 +1,10 @@
 name: mahnegar
-description: Persian calendar, astronomy and astrology companion.
+description: تقویم فارسی ماه‌نگار با رویدادها، کارها، نجوم و همگام‌سازی تقویم دستگاه.
 publish_to: "none"
-version: 0.1.0+1
+version: 0.2.0+2
 
 environment:
-  sdk: ">=3.5.0 <4.0.0"
+  sdk: ">=3.7.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -15,6 +15,9 @@ dependencies:
   shamsi_date: ^1.0.4
   intl: ^0.20.2
   flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.5.3
+  device_calendar_plus: ^0.8.1
+  astronomia: ^1.1.1
 
 dev_dependencies:
   flutter_test:
@@ -23,3 +26,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+# نکته فونت:
+# برای رعایت مجوز IRANSans، فایل فونت داخل مخزن عمومی قرار نگرفته است.
+# در صورت داشتن مجوز، خانواده IRANSans را به assets/fonts اضافه و در این بخش معرفی کنید.
