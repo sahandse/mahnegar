@@ -22,6 +22,26 @@ jobs:
             flutter create --platforms=android --org ir.sahand --project-name mahnegar .
           fi
 
+      - name: Apply final MahNegar branding
+        run: |
+          python3 tool/apply_branding.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64
+
+          source = Path('assets/branding/mahnegar_logo.webp.b64')
+          logo = base64.b64decode(source.read_text().strip())
+
+          drawable = Path('android/app/src/main/res/drawable-nodpi')
+          drawable.mkdir(parents=True, exist_ok=True)
+          (drawable / 'mahnegar_master.webp').write_bytes(logo)
+
+          for density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']:
+              target = Path(f'android/app/src/main/res/mipmap-{density}')
+              target.mkdir(parents=True, exist_ok=True)
+              (target / 'ic_launcher.webp').write_bytes(logo)
+          PY
+
       - name: Configure Android
         run: |
           python3 - <<'PY'
@@ -38,7 +58,7 @@ jobs:
               if permission not in text:
                   text = text.replace(marker, marker + f'\n    <uses-permission android:name="{permission}" />')
           text = text.replace('android:label="mahnegar"', 'android:label="ماه‌نگار"')
-          text = text.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/mahnegar_logo"')
+          text = text.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher"')
           manifest.write_text(text)
 
           gradle = Path('android/app/build.gradle.kts')
@@ -53,16 +73,41 @@ jobs:
                   g += '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n'
               gradle.write_text(g)
           PY
+
           mkdir -p android/app/src/main/res/drawable
-          cat > android/app/src/main/res/drawable/mahnegar_logo.xml <<'XML'
+          cat > android/app/src/main/res/drawable/ic_stat_mahnegar.xml <<'XML'
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="108dp" android:height="108dp"
-              android:viewportWidth="108" android:viewportHeight="108">
-            <path android:fillColor="#131936" android:pathData="M18,0h72a18,18 0,0 1,18 18v72a18,18 0,0 1,-18 18h-72a18,18 0,0 1,-18 -18v-72a18,18 0,0 1,18 -18z"/>
-            <path android:fillColor="#FFD98A" android:pathData="M62,17c-20,5 -31,25 -24,44 7,19 28,28 46,18 -9,2 -20,-1 -27,-9 -13,-14 -11,-37 5,-53z"/>
-            <path android:fillColor="#FFFFFF" android:pathData="M48,55h33a5,5 0,0 1,5 5v24a5,5 0,0 1,-5 5h-33a5,5 0,0 1,-5 -5v-24a5,5 0,0 1,5 -5z"/>
-            <path android:fillColor="#3347C8" android:pathData="M43,65h43v6h-43zM52,76h6v6h-6zM62,76h6v6h-6zM72,76h6v6h-6z"/>
+              android:width="24dp" android:height="24dp"
+              android:viewportWidth="24" android:viewportHeight="24">
+            <path android:fillColor="#FFFFFFFF" android:pathData="M15.8,2.2c-4.6,1.2 -7.5,5.8 -6.1,10.3 1.4,4.5 6.2,6.9 10.5,5.1 -2.3,0.3 -4.7,-0.5 -6.2,-2.3 -2.9,-3.3 -2.2,-8.5 1.8,-13.1z"/>
+            <path android:fillColor="#FFFFFFFF" android:pathData="M8,10h8.8c0.7,0 1.2,0.5 1.2,1.2v7.1c0,0.7 -0.5,1.2 -1.2,1.2H8c-0.7,0 -1.2,-0.5 -1.2,-1.2v-7.1C6.8,10.5 7.3,10 8,10zM8.2,12.1h8.4v1.3H8.2zM9.1,14.6h1.5v1.5H9.1zM11.8,14.6h1.5v1.5h-1.5zM14.5,14.6h1.5v1.5h-1.5z"/>
           </vector>
+          XML
+
+          cat > android/app/src/main/res/drawable/launch_background.xml <<'XML'
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+            <item>
+              <shape android:shape="rectangle">
+                <solid android:color="#08152F" />
+              </shape>
+            </item>
+            <item android:gravity="center" android:width="180dp" android:height="180dp">
+              <bitmap android:gravity="fill" android:src="@drawable/mahnegar_master" />
+            </item>
+          </layer-list>
+          XML
+
+          cat > android/app/src/main/res/drawable-v21/launch_background.xml <<'XML'
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+            <item>
+              <shape android:shape="rectangle">
+                <solid android:color="#08152F" />
+              </shape>
+            </item>
+            <item android:gravity="center" android:width="180dp" android:height="180dp">
+              <bitmap android:gravity="fill" android:src="@drawable/mahnegar_master" />
+            </item>
+          </layer-list>
           XML
 
       - name: Install dependencies
