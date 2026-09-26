@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mahnegar/core/services/notification_service.dart';
 import 'package:mahnegar/features/home/mahnegar_home.dart';
+import 'package:mahnegar/features/onboarding/onboarding_gate.dart';
 
 final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
 
@@ -48,10 +49,7 @@ class MahNegarApp extends StatelessWidget {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: dark ? const Color(0xFF1A1F2C) : const Color(0xFFF1F3F9),
-        border: OutlineInputBorder(
-          borderSide: BorderSide.none,
-          borderRadius: BorderRadius.circular(16),
-        ),
+        border: OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.circular(16)),
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
@@ -83,7 +81,7 @@ class MahNegarApp extends StatelessWidget {
         themeMode: mode,
         home: const Directionality(
           textDirection: TextDirection.rtl,
-          child: MahNegarHome(),
+          child: OnboardingGate(child: MahNegarHome()),
         ),
       ),
     );
