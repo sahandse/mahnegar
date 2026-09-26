@@ -1,7 +1,7 @@
 name: mahnegar
 description: تقویم فارسی ماه‌نگار با رویدادها، کارها، نجوم و همگام‌سازی تقویم دستگاه.
 publish_to: "none"
-version: 1.0.0+5
+version: 1.0.1+6
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
