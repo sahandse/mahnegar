@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mahnegar/core/services/astronomy_alert_service.dart';
+import 'package:mahnegar/core/services/home_widget_service.dart';
 import 'package:mahnegar/core/services/notification_service.dart';
 import 'package:mahnegar/features/home/mahnegar_home.dart';
 import 'package:mahnegar/features/onboarding/onboarding_gate.dart';
@@ -19,8 +21,12 @@ void main() {
 Future<void> _initializeOptionalServices() async {
   try {
     await MahNegarNotificationService.instance.initialize();
+    await MahNegarHomeWidgetService().refresh();
+    if (await AstronomyAlertService.instance.isEnabled()) {
+      await AstronomyAlertService.instance.scheduleUpcoming();
+    }
   } catch (error, stackTrace) {
-    debugPrint('MahNegar optional notification init failed: $error');
+    debugPrint('MahNegar optional services init failed: $error');
     debugPrintStack(stackTrace: stackTrace);
   }
 }
