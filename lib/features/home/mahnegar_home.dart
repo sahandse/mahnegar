@@ -6,7 +6,7 @@ import '../../core/services/astronomy_service.dart';
 import '../../core/services/iran_holidays.dart';
 import '../../core/services/local_store.dart';
 import '../../core/services/notification_service.dart';
-import 'mahnegar_dashboard_v4.dart';
+import 'mahnegar_dashboard_v5.dart';
 
 class MahNegarHome extends StatefulWidget {
   const MahNegarHome({super.key});
@@ -72,5 +72,5 @@ class _MahNegarHomeState extends State<MahNegarHome> {
   }
 
   @override
-  Widget build(BuildContext context) => const MahNegarDashboardV4();
+  Widget build(BuildContext context) => const MahNegarDashboardV5();
 }
