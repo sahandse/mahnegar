@@ -19,9 +19,6 @@ class SolarLightWindows {
 class SolarLightService {
   SolarLightWindows calculate(DateTime localDate, SkyCity city) {
     DateTime? crossing(double altitude, bool morning) {
-      final dayOfYear = int.parse(
-        '${localDate.year}${localDate.month.toString().padLeft(2, '0')}${localDate.day.toString().padLeft(2, '0')}',
-      );
       final start = DateTime(localDate.year, localDate.month, localDate.day);
       final n = start.difference(DateTime(localDate.year, 1, 1)).inDays + 1;
       final gamma = 2 * math.pi / 365 * (n - 1 + (morning ? 6 : 18) / 24);
