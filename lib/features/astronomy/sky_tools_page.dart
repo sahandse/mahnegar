@@ -9,6 +9,7 @@ import '../../core/services/device_sky_service.dart';
 import '../../core/services/sky_times_service.dart';
 import '../../core/services/solar_light_service.dart';
 import 'lunar_month_page.dart';
+import 'planetary_hours_page.dart';
 
 class SkyToolsPage extends StatefulWidget {
   const SkyToolsPage({super.key, this.initialCity});
@@ -156,6 +157,19 @@ class _SkyToolsPageState extends State<SkyToolsPage> {
             _InfoLine(label: 'سن ماه', value: '${_fa(moon.moonAgeDays.toStringAsFixed(1))} روز'),
             _InfoLine(label: 'برج', value: moon.zodiacName),
           ]),
+          const SizedBox(height: 14),
+          Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              leading: const CircleAvatar(child: Text('♃', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900))),
+              title: const Text('اوقات کواکب و Jupiter Alarm', style: TextStyle(fontWeight: FontWeight.w900)),
+              subtitle: const Text('ساعت فعلی، ۱۲ ساعت روز و شب و یادآوری ساعت مشتری'),
+              trailing: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => PlanetaryHoursPage(initialCity: _city)),
+              ),
+            ),
+          ),
           const SizedBox(height: 14),
           Card(
             child: SwitchListTile(
