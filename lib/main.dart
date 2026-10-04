@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mahnegar/core/services/astronomy_alert_service.dart';
 import 'package:mahnegar/core/services/home_widget_service.dart';
 import 'package:mahnegar/core/services/notification_service.dart';
+import 'package:mahnegar/core/services/planetary_alarm_service.dart';
 import 'package:mahnegar/features/home/mahnegar_home.dart';
 import 'package:mahnegar/features/onboarding/onboarding_gate.dart';
 
@@ -25,6 +26,7 @@ Future<void> _initializeOptionalServices() async {
     if (await AstronomyAlertService.instance.isEnabled()) {
       await AstronomyAlertService.instance.scheduleUpcoming();
     }
+    await PlanetaryAlarmService.instance.refreshIfEnabled();
   } catch (error, stackTrace) {
     debugPrint('MahNegar optional services init failed: $error');
     debugPrintStack(stackTrace: stackTrace);
